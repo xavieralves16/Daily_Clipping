@@ -29,9 +29,17 @@ def recolher_noticias():
 
 
 def obter_dados_economicos():
-    eur_usd = requests.get("https://api.exchangerate.host/latest?base=EUR&symbols=USD").json()["rates"]["USD"]
-    ibex = requests.get("https://query1.finance.yahoo.com/v8/finance/chart/%5EIBEX").status_code  # teste
-    return {"EUR/USD": round(eur_usd, 3)}
+    try:
+        resp = requests.get("https://api.exchangerate.host/latest?base=EUR&symbols=USD")
+        data = resp.json()
+        if "rates" in data and "USD" in data["rates"]:
+            eur_usd = round(data["rates"]["USD"], 3)
+        else:
+            eur_usd = "N/D"
+    except Exception as e:
+        print(f"⚠️ Erro ao obter câmbio EUR/USD: {e}")
+        eur_usd = "Erro"
+    return {"EUR/USD": eur_usd}
 
 
 def gerar_html(noticias, economia):
