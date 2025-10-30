@@ -5,7 +5,7 @@ import os
 import json
 from urllib.parse import urljoin
 
-ARQUIVO_SAIDA = r"C:\Users\XAlves\OneDrive - Metalurgica Progresso, S.A\Clipping\Daily_Clipping\clipping.html"
+ARQUIVO_SAIDA = "clipping.html"
 URL_LUSA_ECONOMIA = "https://www.lusa.pt/economia"
 URL_NYTIMES_BUSINESS = "https://www.nytimes.com/section/business"
 NUM_NOTICIAS_PT = 17
