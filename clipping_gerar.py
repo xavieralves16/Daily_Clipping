@@ -5,13 +5,11 @@ import os
 import json
 from urllib.parse import urljoin
 
-
 ARQUIVO_SAIDA = r"C:\Users\XAlves\OneDrive - Metalurgica Progresso, S.A\Clipping\Daily_Clipping\clipping.html"
-
-
 URL_LUSA_ECONOMIA = "https://www.lusa.pt/economia"
-NUM_NOTICIAS = 17
-
+URL_NYTIMES_BUSINESS = "https://www.nytimes.com/section/business"
+NUM_NOTICIAS_PT = 17
+NUM_NOTICIAS_INT = 10
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
@@ -19,14 +17,11 @@ HEADERS = {
     "Cache-Control": "no-cache",
 }
 
-
 def obter_dados_economicos():
     moedas = ["USD", "GBP", "CHF", "JPY", "CNY", "CAD", "AUD", "BRL", "INR", "ZAR"]
     dados = {}
-
     pasta = os.path.dirname(ARQUIVO_SAIDA) or "."
     caminho_dados = os.path.join(pasta, "ultimas_taxas.json")
-
     anteriores = {}
     if os.path.exists(caminho_dados):
         try:
@@ -34,7 +29,6 @@ def obter_dados_economicos():
                 anteriores = json.load(f)
         except Exception:
             anteriores = {}
-
     try:
         r = requests.get("https://open.er-api.com/v6/latest/EUR", timeout=12)
         data = r.json()
@@ -50,19 +44,14 @@ def obter_dados_economicos():
                     dados[m] = {"valor": v, "variacao": var}
                 else:
                     dados[m] = {"valor": "N/D", "variacao": None}
-        else:
-            print("⚠️ Resposta inesperada (câmbios):", data)
     except Exception as e:
         print(f"⚠️ Erro a obter câmbios: {e}")
-
-
     try:
         atuais = {m: float(dados[m]["valor"]) for m in dados if isinstance(dados[m]["valor"], (int, float))}
         with open(caminho_dados, "w", encoding="utf-8") as f:
             json.dump(atuais, f, indent=2, ensure_ascii=False)
     except Exception as e:
         print(f"⚠️ Não foi possível gravar ultimas_taxas.json: {e}")
-
     nomes = {
         "USD": "Dólar Americano (USD)",
         "GBP": "Libra Esterlina (GBP)",
@@ -77,45 +66,35 @@ def obter_dados_economicos():
     }
     return {nomes[k]: v for k, v in dados.items() if k in nomes}
 
-
 def _limpa_texto(t):
-    t = (t or "").strip()
+    t = (t or "").strip().replace("\n", " ")
     while "  " in t:
         t = t.replace("  ", " ")
     return t
 
-def _corta(resumo, n=240):
-    resumo = _limpa_texto(resumo)
-    if len(resumo) <= n:
-        return resumo if resumo else ""
-    return resumo[: n - 3].rsplit(" ", 1)[0] + "..."
+def _corta(txt, n=240):
+    txt = _limpa_texto(txt)
+    if len(txt) <= n:
+        return txt
+    return txt[: n - 3].rsplit(" ", 1)[0] + "..."
 
 def recolher_noticias():
     noticias = {"Portugal": []}
-
     try:
         html = requests.get(URL_LUSA_ECONOMIA, headers=HEADERS, timeout=12).text
         soup = BeautifulSoup(html, "html.parser")
-
         artigos = []
-
-
         artigos.extend(soup.select("article"))
-
-
         artigos.extend(soup.select('div[class*="news"], li[class*="news"]'))
         artigos.extend(soup.select('div[class*="article"], li[class*="article"]'))
-
         vistos = set()
         cards = []
         for a in artigos:
             if id(a) not in vistos:
                 vistos.add(id(a))
                 cards.append(a)
-
         items = []
         for card in cards:
-
             h = card.find(["h1", "h2", "h3"])
             a = h.find("a") if h else card.find("a")
             titulo = _limpa_texto(h.get_text()) if h else _limpa_texto(a.get_text() if a else "")
@@ -123,12 +102,8 @@ def recolher_noticias():
             if not titulo or not href:
                 continue
             link = urljoin("https://www.lusa.pt", href)
-
-
             p = card.find("p")
             resumo = _corta(p.get_text() if p else "")
-
-
             img = card.find("img")
             imagem = None
             if img:
@@ -136,35 +111,47 @@ def recolher_noticias():
                     imagem = urljoin("https://www.lusa.pt", img["src"])
                 elif img.has_attr("data-src"):
                     imagem = urljoin("https://www.lusa.pt", img["data-src"])
-
             items.append({
                 "titulo": titulo,
                 "descricao": resumo,
                 "link": link,
                 "imagem": imagem
             })
-
-            if len(items) >= NUM_NOTICIAS:
+            if len(items) >= NUM_NOTICIAS_PT:
                 break
-
-
-        if not items:
-            for a in soup.select("a[href^='/'], a[href*='/economia/']"):
-                titulo = _limpa_texto(a.get_text())
-                if len(titulo) < 25:  
-                    continue
-                link = urljoin("https://www.lusa.pt", a["href"])
-                items.append({"titulo": titulo, "descricao": "Sem descrição disponível.", "link": link, "imagem": None})
-                if len(items) >= NUM_NOTICIAS:
-                    break
-
         noticias["Portugal"] = items
-
     except Exception as e:
         print(f"⚠️ Erro a extrair da LUSA: {e}")
-
     return noticias
 
+def recolher_noticias_internacionais():
+    noticias = []
+    try:
+        html = requests.get(URL_NYTIMES_BUSINESS, headers=HEADERS, timeout=12).text
+        soup = BeautifulSoup(html, "html.parser")
+        artigos = soup.select("section[data-testid='block-Briefings'] article, section[data-testid='stream-panel'] article")
+        if not artigos:
+            artigos = soup.select("article")
+        for art in artigos[:NUM_NOTICIAS_INT]:
+            titulo_tag = art.find(["h2", "h3"])
+            titulo = _limpa_texto(titulo_tag.get_text() if titulo_tag else "")
+            a = titulo_tag.find("a") if titulo_tag else art.find("a")
+            link = urljoin("https://www.nytimes.com", a["href"]) if a and a.has_attr("href") else None
+            resumo_tag = art.find("p")
+            resumo = _corta(resumo_tag.get_text()) if resumo_tag else "No summary available."
+            img = art.find("img")
+            imagem = None
+            if img and img.has_attr("src"):
+                imagem = img["src"]
+            noticias.append({
+                "titulo": titulo,
+                "descricao": resumo,
+                "link": link,
+                "imagem": imagem
+            })
+    except Exception as e:
+        print(f"⚠️ Erro a extrair da NY Times: {e}")
+    return {"Internacional": noticias}
 
 def gerar_html(noticias, economia):
     data_str = datetime.now().strftime("%d/%m/%Y")
@@ -223,7 +210,6 @@ def gerar_html(noticias, economia):
         <h2>Dados Económicos</h2>
         <div class="economia">
 """
-
     for nome, info in economia.items():
         valor = info["valor"]
         variacao = info["variacao"]
@@ -235,9 +221,7 @@ def gerar_html(noticias, economia):
         else:
             var_txt = ""
         html += f"<div><span>{nome}:</span> {valor_txt} {var_txt}</div>\n"
-
     html += "</div>\n</section>\n"
-
     for cat, lista in noticias.items():
         html += f"<section><h2>{cat}</h2>\n"
         if not lista:
@@ -251,7 +235,6 @@ def gerar_html(noticias, economia):
             html += f"<a href='{n['link']}'>Ler mais ➜</a>\n"
             html += "</div>\n"
         html += "</section>\n"
-
     html += f"""
     <footer>
         <p>Gerado automaticamente por sistema de clipping — {data_str}</p>
@@ -259,16 +242,14 @@ def gerar_html(noticias, economia):
 </div>
 </body>
 </html>"""
-
     os.makedirs(os.path.dirname(ARQUIVO_SAIDA) or ".", exist_ok=True)
     with open(ARQUIVO_SAIDA, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"[✔] Clipping atualizado: {ARQUIVO_SAIDA}")
 
-
 if __name__ == "__main__":
-    noticias = recolher_noticias()          
-    economia = obter_dados_economicos()     
-    gerar_html(noticias, economia)
-
-
+    noticias_pt = recolher_noticias()
+    noticias_int = recolher_noticias_internacionais()
+    economia = obter_dados_economicos()
+    todas = {**noticias_pt, **noticias_int}
+    gerar_html(todas, economia)
