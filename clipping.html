@@ -7,84 +7,39 @@
     body {
         font-family: 'Segoe UI', Arial, sans-serif;
         background-color: #f4f6f8;
-        margin: 0;
-        padding: 0;
-        color: #333;
+        margin: 0; padding: 0; color: #333;
     }
     .container {
-        max-width: 800px;
-        margin: 40px auto;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        overflow: hidden;
+        max-width: 900px; margin: 40px auto; background: #fff;
+        border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;
     }
-    header {
-        background-color: #0078d4;
-        color: white;
-        padding: 25px;
-        text-align: center;
-    }
-    header h1 {
-        margin: 0;
-        font-size: 26px;
-        font-weight: 600;
-    }
-    header p {
-        margin: 5px 0 0;
-        font-size: 14px;
-        color: #e0e0e0;
-    }
-    section {
-        padding: 30px 40px;
-    }
+    header { background-color: #0078d4; color: #fff; padding: 25px; text-align: center; }
+    header h1 { margin: 0; font-size: 28px; font-weight: 600; }
+    header p { margin: 5px 0 0; font-size: 14px; color: #e0e0e0; }
+    section { padding: 30px 40px; }
     h2 {
-        color: #0078d4;
-        border-bottom: 2px solid #0078d4;
-        padding-bottom: 5px;
-        margin-top: 40px;
-        font-size: 20px;
+        color: #0078d4; border-bottom: 2px solid #0078d4;
+        padding-bottom: 5px; margin-top: 40px; font-size: 20px;
     }
+    .economia {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 8px 30px;
+        font-size: 15px; line-height: 1.6;
+    }
+    .economia span { font-weight: bold; }
+    .up { color: #28a745; } .down { color: #dc3545; }
     .news-item {
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #eee;
+        margin-bottom: 18px; border: 1px solid #e0e0e0; border-radius: 10px;
+        padding: 14px 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
-    .news-item:last-child {
-        border-bottom: none;
+    .news-item strong { color: #111; font-size: 17px; display: block; margin-bottom: 6px; }
+    .news-item p { color: #444; margin: 6px 0 10px; font-size: 15px; }
+    .news-item img {
+        display: block; max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0;
     }
-    .news-item strong {
-        color: #222;
-        font-size: 16px;
-    }
-    .news-item p {
-        margin: 5px 0;
-        line-height: 1.5;
-        color: #555;
-    }
-    a {
-        color: #0078d4;
-        text-decoration: none;
-        font-weight: 500;
-    }
-    a:hover {
-        text-decoration: underline;
-    }
-    footer {
-        background-color: #f0f0f0;
-        text-align: center;
-        padding: 15px;
-        font-size: 12px;
-        color: #777;
-        border-top: 1px solid #ddd;
-    }
-    ul {
-        list-style: none;
-        padding: 0;
-    }
-    li {
-        padding: 4px 0;
-    }
+    a { color: #0078d4; text-decoration: none; font-weight: 500; }
+    a:hover { text-decoration: underline; }
+    footer { background-color: #f0f0f0; text-align: center; padding: 15px;
+             font-size: 12px; color: #777; border-top: 1px solid #ddd; }
 </style>
 </head>
 <body>
@@ -96,65 +51,63 @@
 
     <section>
         <h2>Dados Económicos</h2>
-        <ul>
-<li><b>EUR/USD:</b> 1.162</li></ul><h2>Economia</h2>
-            <div class='news-item'>
-                <strong>Cinco novos suspeitos do assalto ao Louvre detidos pelas autoridades francesas</strong>
-                <p>As autoridades francesas efetuaram cinco novas detenções, incluindo a de um dos principais suspeitos, no âmbito da investigação do assalto ao Museu do Louvre, em Paris, noticiou a rádio RTL. A procura</p>
-                <a href='https://eco.sapo.pt/2025/10/30/cinco-novos-suspeitos-do-assalto-ao-louvre-detidos-pelas-autoridades-francesas/'>Ler mais ➜</a>
-            </div>
-            
-            <div class='news-item'>
-                <strong>Economia cresce 2,4% em termos homólogos e 0,8% em cadeia no terceiro trimestre</strong>
-                <p>A economia portuguesa cresceu 2,4% em termos homólogos no terceiro trimestre, traduzindo uma aceleração face à taxa de 1,8% registada entre abril e junho, de acordo com a estimativa rápida do Institut</p>
-                <a href='https://eco.sapo.pt/2025/10/30/economia-cresce-24-em-termos-homologos-e-08-em-cadeia-no-terceiro-trimestre/'>Ler mais ➜</a>
-            </div>
-            
-            <div class='news-item'>
-                <strong>Popular Reporting: a peça que falta na transparência financeira do setor público?</strong>
-                <p>Nas recentes eleições ouviram-se bastantes promessas de transparência política e de boas práticas de gestão autárquica. Práticas de Nova Gestão Pública têm introduzido mudanças significativas nos meca</p>
-                <a href='https://eco.sapo.pt/opiniao/popular-reporting-a-peca-que-falta-na-transparencia-financeira-do-setor-publico/'>Ler mais ➜</a>
-            </div>
-            
-            <div class='news-item'>
-                <strong>Lisboa-Madrid de comboio em 5 horas até 2030</strong>
-                <p>Governos ibéricos e Bruxelas fecharam hoje acordos para executar o projeto. Mais tarde, até 2034, o objetivo é ligar as capitais ibéricas em 3 horas.</p>
-                <a href='https://jornaleconomico.sapo.pt/noticias/lisboa-madrid-de-comboio-em-5-horas-ate-2030/'>Ler mais ➜</a>
-            </div>
-            
-            <div class='news-item'>
-                <strong>Meta reporta crescimento da receita em 26% no terceiro trimestre</strong>
-                <p>"Tivemos um trimestre forte para os nossos negócios e a nossa comunidade", disse Mark Zuckerberg, fundador e CEO da Meta. "A Meta Superintelligence Labs teve um ótimo começo e continuamos a liderar o </p>
-                <a href='https://jornaleconomico.sapo.pt/noticias/meta-reporta-crescimento-da-receita-em-26-no-terceiro-trimestre/'>Ler mais ➜</a>
-            </div>
-            
-            <div class='news-item'>
-                <strong>Atividade na reabilitação urbana sobe 9% em setembro</strong>
-                <p>Trata-se de uma melhoria face ao crescimento de 5,3%, registado no mês passado, assinala o barómetro da Associação dos Industriais da Construção Civil e Obras Públicas (AICCOPN).</p>
-                <a href='https://jornaleconomico.sapo.pt/noticias/atividade-na-reabilitacao-urbana-sobe-9-em-setembro/'>Ler mais ➜</a>
-            </div>
-            <h2>Política</h2><h2>Sociedade</h2>
-            <div class='news-item'>
-                <strong>Presidenciais. Marcelo marca as eleições para 18 de janeiro</strong>
-                <p>O chefe de Estado tinha confirmado a meio de setembro estar inclinado a marcar as eleições presidenciais para esta data</p>
-                <a href='https://observador.pt/2025/10/30/presidenciais-presidente-da-republica-marcou-as-eleicoes-para-18-de-janeiro/'>Ler mais ➜</a>
-            </div>
-            
-            <div class='news-item'>
-                <strong>Lucros do BBVA crescem 4,7% até setembro, para 7.978 milhões</strong>
-                <p>Segundo o BBVA, os resultados deveram-se ao crescimento da carteira de crédito e das receitas recorrentes</p>
-                <a href='https://observador.pt/2025/10/30/lucros-do-bbva-crescem-47-ate-setembro-para-7-978-milhoes-de-euros/'>Ler mais ➜</a>
-            </div>
-            
-            <div class='news-item'>
-                <strong>Rússia atacou centrais térmicas em várias regiões da Ucrânia</strong>
-                <p>As tropas ucranianas repeliram, nas últimas 24 horas, 55 ataques russos na frente de Pokrovsk</p>
-                <a href='https://observador.pt/2025/10/30/russia-atacou-centrais-termicas-em-varias-regioes-da-ucrania/'>Ler mais ➜</a>
-            </div>
-            
-    </section>
+        <div class="economia">
+<div><span>Dólar Americano (USD):</span> 1.162 <span class='up'>▲ 0.00%</span></div>
+<div><span>Libra Esterlina (GBP):</span> 0.88 <span class='up'>▲ 0.00%</span></div>
+<div><span>Franco Suíço (CHF):</span> 0.928 <span class='up'>▲ 0.00%</span></div>
+<div><span>Iene Japonês (JPY):</span> 177.186 <span class='up'>▲ 0.00%</span></div>
+<div><span>Yuan Chinês (CNY):</span> 8.257 <span class='up'>▲ 0.00%</span></div>
+<div><span>Dólar Canadiano (CAD):</span> 1.619 <span class='up'>▲ 0.00%</span></div>
+<div><span>Dólar Australiano (AUD):</span> 1.765 <span class='up'>▲ 0.00%</span></div>
+<div><span>Real Brasileiro (BRL):</span> 6.222 <span class='up'>▲ 0.00%</span></div>
+<div><span>Rupia Indiana (INR):</span> 102.706 <span class='up'>▲ 0.00%</span></div>
+<div><span>Rand Sul-Africano (ZAR):</span> 19.932 <span class='up'>▲ 0.00%</span></div>
+</div>
+</section>
+<section><h2>Portugal</h2>
+<div class='news-item'>
+<strong>Primeiro-ministro assegura que agricultura vai continuar a ter fundos europeus necessários</strong>
+<p>Sem descrição disponível.</p>
+<img src='https://www.lusa.pt/temp/images/180x120/cache_180x120_Crop_high_45944426_5035250_30102025102530.JPG' alt='Imagem da notícia'>
+<a href='https://www.lusa.pt/economia/article/2025-10-30/45944596/primeiro-ministro-assegura-que-agricultura-vai-continuar-a-ter-fundos-europeus-necessários'>Ler mais ➜</a>
+</div>
+<div class='news-item'>
+<strong>Lucros da Shell descem 10% até setembro para 11.784 ME</strong>
+<p>Sem descrição disponível.</p>
+<img src='https://www.lusa.pt/temp/images/180x120/cache_180x120_Crop_high_45803761_488655244061965.jpg' alt='Imagem da notícia'>
+<a href='https://www.lusa.pt/economia/article/2025-10-30/45944594/lucros-da-shell-descem-10-até-setembro-para-11-784-me'>Ler mais ➜</a>
+</div>
+<div class='news-item'>
+<strong>PIB do euro avança 1,3% no 3.º trimestre face a 2024 e Portugal tem 4.º maior</strong>
+<p>Sem descrição disponível.</p>
+<img src='https://www.lusa.pt/temp/images/180x120/cache_180x120_Crop_high_13422189_705011_21012021012224.jpg' alt='Imagem da notícia'>
+<a href='https://www.lusa.pt/economia/article/2025-10-30/45944516/pib-do-euro-avança-1-3-no-3-º-trimestre-face-a-2024-e-portugal-tem-4-º-maior'>Ler mais ➜</a>
+</div>
+<div class='news-item'>
+<strong>Ligação ferroviária Lisboa-Madrid em 5 horas avança até 2030</strong>
+<p>Sem descrição disponível.</p>
+<a href='https://www.lusa.pt/economia/article/2025-10-30/45944472/ligação-ferroviária-lisboa-madrid-em-5-horas-avança-até-2030'>Ler mais ➜</a>
+</div>
+<div class='news-item'>
+<strong>Castanha pequena mas com qualidade em Bragança e Vinhais embora haja quebras</strong>
+<p>Sem descrição disponível.</p>
+<a href='https://www.lusa.pt/economia/article/2025-10-30/45944383/castanha-pequena-mas-com-qualidade-em-bragança-e-vinhais-embora-haja-quebras'>Ler mais ➜</a>
+</div>
+<div class='news-item'>
+<strong>Lucro da Lufthansa sobe 32% para 1.093 ME até setembro</strong>
+<p>Sem descrição disponível.</p>
+<a href='https://www.lusa.pt/economia/article/2025-10-30/45944373/lucro-da-lufthansa-sobe-32-para-1-093-me-até-setembro'>Ler mais ➜</a>
+</div>
+<div class='news-item'>
+<strong>Lucro da TotalEnergies cai 13% para 8.780 ME até setembro</strong>
+<p>Sem descrição disponível.</p>
+<a href='https://www.lusa.pt/economia/article/2025-10-30/45944352/lucro-da-totalenergies-cai-13-para-8-780-me-até-setembro'>Ler mais ➜</a>
+</div>
+</section>
+
     <footer>
         <p>Gerado automaticamente por sistema de clipping — 30/10/2025</p>
     </footer>
 </div>
-</body></html>
+</body>
+</html>

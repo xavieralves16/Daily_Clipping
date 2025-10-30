@@ -1,184 +1,274 @@
 import requests
-import feedparser
+from bs4 import BeautifulSoup
 from datetime import datetime
 import os
-from bs4 import BeautifulSoup
+import json
+from urllib.parse import urljoin
+
 
 ARQUIVO_SAIDA = r"C:\Users\XAlves\OneDrive - Metalurgica Progresso, S.A\Clipping\Daily_Clipping\clipping.html"
 
 
-FONTES = {
-    "Economia": ["https://eco.sapo.pt/feed/", "https://jornaleconomico.pt/feed"],
-    "Política": ["https://expresso.pt/rss/politica.html"],
-    "Sociedade": ["https://observador.pt/seccao/sociedade/feed/"]
-}
+URL_LUSA_ECONOMIA = "https://www.lusa.pt/economia"
+NUM_NOTICIAS = 7
 
-def recolher_noticias():
-    noticias = {}
-    for categoria, urls in FONTES.items():
-        noticias[categoria] = []
-        for url in urls:
-            feed = feedparser.parse(url)
-            for entry in feed.entries[:3]:  
-                noticias[categoria].append({
-                    "titulo": entry.title,
-                    "link": entry.link,
-                    "descricao": BeautifulSoup(entry.summary, "html.parser").text[:200]
-                })
-    return noticias
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+    "Accept-Language": "pt-PT,pt;q=0.9,en;q=0.8",
+    "Cache-Control": "no-cache",
+}
 
 
 def obter_dados_economicos():
+    moedas = ["USD", "GBP", "CHF", "JPY", "CNY", "CAD", "AUD", "BRL", "INR", "ZAR"]
+    dados = {}
+
+    pasta = os.path.dirname(ARQUIVO_SAIDA) or "."
+    caminho_dados = os.path.join(pasta, "ultimas_taxas.json")
+
+    anteriores = {}
+    if os.path.exists(caminho_dados):
+        try:
+            with open(caminho_dados, "r", encoding="utf-8") as f:
+                anteriores = json.load(f)
+        except Exception:
+            anteriores = {}
+
     try:
-        resp = requests.get("https://open.er-api.com/v6/latest/EUR")
-        data = resp.json()
-
-        if data.get("result") == "success" and "rates" in data and "USD" in data["rates"]:
-            eur_usd = round(data["rates"]["USD"], 3)
+        r = requests.get("https://open.er-api.com/v6/latest/EUR", timeout=12)
+        data = r.json()
+        if data.get("result") == "success" and "rates" in data:
+            rates = data["rates"]
+            for m in moedas:
+                v = rates.get(m)
+                if v:
+                    v = round(float(v), 3)
+                    var = None
+                    if m in anteriores and anteriores[m] > 0:
+                        var = ((v - anteriores[m]) / anteriores[m]) * 100.0
+                    dados[m] = {"valor": v, "variacao": var}
+                else:
+                    dados[m] = {"valor": "N/D", "variacao": None}
         else:
-            print("⚠️ Resposta inesperada da API:", data)
-            eur_usd = "N/D"
+            print("⚠️ Resposta inesperada (câmbios):", data)
     except Exception as e:
-        print(f"⚠️ Erro ao obter câmbio EUR/USD: {e}")
-        eur_usd = "Erro"
+        print(f"⚠️ Erro a obter câmbios: {e}")
 
-    return {"EUR/USD": eur_usd}
+
+    try:
+        atuais = {m: float(dados[m]["valor"]) for m in dados if isinstance(dados[m]["valor"], (int, float))}
+        with open(caminho_dados, "w", encoding="utf-8") as f:
+            json.dump(atuais, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"⚠️ Não foi possível gravar ultimas_taxas.json: {e}")
+
+    nomes = {
+        "USD": "Dólar Americano (USD)",
+        "GBP": "Libra Esterlina (GBP)",
+        "CHF": "Franco Suíço (CHF)",
+        "JPY": "Iene Japonês (JPY)",
+        "CNY": "Yuan Chinês (CNY)",
+        "CAD": "Dólar Canadiano (CAD)",
+        "AUD": "Dólar Australiano (AUD)",
+        "BRL": "Real Brasileiro (BRL)",
+        "INR": "Rupia Indiana (INR)",
+        "ZAR": "Rand Sul-Africano (ZAR)",
+    }
+    return {nomes[k]: v for k, v in dados.items() if k in nomes}
+
+
+def _limpa_texto(t):
+    t = (t or "").strip()
+    while "  " in t:
+        t = t.replace("  ", " ")
+    return t
+
+def _corta(resumo, n=240):
+    resumo = _limpa_texto(resumo)
+    if len(resumo) <= n:
+        return resumo if resumo else "Sem descrição disponível."
+    return resumo[: n - 3].rsplit(" ", 1)[0] + "..."
+
+def recolher_noticias():
+    noticias = {"Portugal": []}
+
+    try:
+        html = requests.get(URL_LUSA_ECONOMIA, headers=HEADERS, timeout=12).text
+        soup = BeautifulSoup(html, "html.parser")
+
+        artigos = []
+
+
+        artigos.extend(soup.select("article"))
+
+
+        artigos.extend(soup.select('div[class*="news"], li[class*="news"]'))
+        artigos.extend(soup.select('div[class*="article"], li[class*="article"]'))
+
+        vistos = set()
+        cards = []
+        for a in artigos:
+            if id(a) not in vistos:
+                vistos.add(id(a))
+                cards.append(a)
+
+        items = []
+        for card in cards:
+
+            h = card.find(["h1", "h2", "h3"])
+            a = h.find("a") if h else card.find("a")
+            titulo = _limpa_texto(h.get_text()) if h else _limpa_texto(a.get_text() if a else "")
+            href = a["href"] if a and a.has_attr("href") else ""
+            if not titulo or not href:
+                continue
+            link = urljoin("https://www.lusa.pt", href)
+
+
+            p = card.find("p")
+            resumo = _corta(p.get_text() if p else "")
+
+
+            img = card.find("img")
+            imagem = None
+            if img:
+                if img.has_attr("src") and img["src"]:
+                    imagem = urljoin("https://www.lusa.pt", img["src"])
+                elif img.has_attr("data-src"):
+                    imagem = urljoin("https://www.lusa.pt", img["data-src"])
+
+            items.append({
+                "titulo": titulo,
+                "descricao": resumo,
+                "link": link,
+                "imagem": imagem
+            })
+
+            if len(items) >= NUM_NOTICIAS:
+                break
+
+
+        if not items:
+            for a in soup.select("a[href^='/'], a[href*='/economia/']"):
+                titulo = _limpa_texto(a.get_text())
+                if len(titulo) < 25:  
+                    continue
+                link = urljoin("https://www.lusa.pt", a["href"])
+                items.append({"titulo": titulo, "descricao": "Sem descrição disponível.", "link": link, "imagem": None})
+                if len(items) >= NUM_NOTICIAS:
+                    break
+
+        noticias["Portugal"] = items
+
+    except Exception as e:
+        print(f"⚠️ Erro a extrair da LUSA: {e}")
+
+    return noticias
 
 
 def gerar_html(noticias, economia):
-    data = datetime.now().strftime("%d/%m/%Y")
+    data_str = datetime.now().strftime("%d/%m/%Y")
     html = f"""<!DOCTYPE html>
 <html lang='pt'>
 <head>
 <meta charset='UTF-8'>
-<title>Clipping Diário — {data}</title>
+<title>Clipping Diário — {data_str}</title>
 <style>
     body {{
         font-family: 'Segoe UI', Arial, sans-serif;
         background-color: #f4f6f8;
-        margin: 0;
-        padding: 0;
-        color: #333;
+        margin: 0; padding: 0; color: #333;
     }}
     .container {{
-        max-width: 800px;
-        margin: 40px auto;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        overflow: hidden;
+        max-width: 900px; margin: 40px auto; background: #fff;
+        border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;
     }}
-    header {{
-        background-color: #0078d4;
-        color: white;
-        padding: 25px;
-        text-align: center;
-    }}
-    header h1 {{
-        margin: 0;
-        font-size: 26px;
-        font-weight: 600;
-    }}
-    header p {{
-        margin: 5px 0 0;
-        font-size: 14px;
-        color: #e0e0e0;
-    }}
-    section {{
-        padding: 30px 40px;
-    }}
+    header {{ background-color: #0078d4; color: #fff; padding: 25px; text-align: center; }}
+    header h1 {{ margin: 0; font-size: 28px; font-weight: 600; }}
+    header p {{ margin: 5px 0 0; font-size: 14px; color: #e0e0e0; }}
+    section {{ padding: 30px 40px; }}
     h2 {{
-        color: #0078d4;
-        border-bottom: 2px solid #0078d4;
-        padding-bottom: 5px;
-        margin-top: 40px;
-        font-size: 20px;
+        color: #0078d4; border-bottom: 2px solid #0078d4;
+        padding-bottom: 5px; margin-top: 40px; font-size: 20px;
     }}
+    .economia {{
+        display: grid; grid-template-columns: 1fr 1fr; gap: 8px 30px;
+        font-size: 15px; line-height: 1.6;
+    }}
+    .economia span {{ font-weight: bold; }}
+    .up {{ color: #28a745; }} .down {{ color: #dc3545; }}
     .news-item {{
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #eee;
+        margin-bottom: 18px; border: 1px solid #e0e0e0; border-radius: 10px;
+        padding: 14px 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }}
-    .news-item:last-child {{
-        border-bottom: none;
+    .news-item strong {{ color: #111; font-size: 17px; display: block; margin-bottom: 6px; }}
+    .news-item p {{ color: #444; margin: 6px 0 10px; font-size: 15px; }}
+    .news-item img {{
+        display: block; max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0;
     }}
-    .news-item strong {{
-        color: #222;
-        font-size: 16px;
-    }}
-    .news-item p {{
-        margin: 5px 0;
-        line-height: 1.5;
-        color: #555;
-    }}
-    a {{
-        color: #0078d4;
-        text-decoration: none;
-        font-weight: 500;
-    }}
-    a:hover {{
-        text-decoration: underline;
-    }}
-    footer {{
-        background-color: #f0f0f0;
-        text-align: center;
-        padding: 15px;
-        font-size: 12px;
-        color: #777;
-        border-top: 1px solid #ddd;
-    }}
-    ul {{
-        list-style: none;
-        padding: 0;
-    }}
-    li {{
-        padding: 4px 0;
-    }}
+    a {{ color: #0078d4; text-decoration: none; font-weight: 500; }}
+    a:hover {{ text-decoration: underline; }}
+    footer {{ background-color: #f0f0f0; text-align: center; padding: 15px;
+             font-size: 12px; color: #777; border-top: 1px solid #ddd; }}
 </style>
 </head>
 <body>
 <div class="container">
     <header>
         <h1>Clipping Diário</h1>
-        <p>{data}</p>
+        <p>{data_str}</p>
     </header>
 
     <section>
         <h2>Dados Económicos</h2>
-        <ul>
+        <div class="economia">
 """
-    # Bloco de economia
-    for nome, valor in economia.items():
-        html += f"<li><b>{nome}:</b> {valor}</li>"
-    html += "</ul>"
 
-    # Bloco de notícias
+    for nome, info in economia.items():
+        valor = info["valor"]
+        variacao = info["variacao"]
+        valor_txt = f"{valor}" if isinstance(valor, (int, float)) else valor
+        if isinstance(variacao, (int, float)) and variacao is not None:
+            cor = "up" if variacao >= 0 else "down"
+            simbolo = "▲" if variacao >= 0 else "▼"
+            var_txt = f"<span class='{cor}'>{simbolo} {abs(variacao):.2f}%</span>"
+        else:
+            var_txt = ""
+        html += f"<div><span>{nome}:</span> {valor_txt} {var_txt}</div>\n"
+
+    html += "</div>\n</section>\n"
+
     for cat, lista in noticias.items():
-        html += f"<h2>{cat}</h2>"
+        html += f"<section><h2>{cat}</h2>\n"
+        if not lista:
+            html += "<p><em>Sem notícias disponíveis.</em></p>\n"
         for n in lista:
-            html += f"""
-            <div class='news-item'>
-                <strong>{n['titulo']}</strong>
-                <p>{n['descricao']}</p>
-                <a href='{n['link']}'>Ler mais ➜</a>
-            </div>
-            """
+            html += "<div class='news-item'>\n"
+            html += f"<strong>{n['titulo']}</strong>\n"
+            html += f"<p>{n['descricao']}</p>\n"
+            if n.get("imagem"):
+                html += f"<img src='{n['imagem']}' alt='Imagem da notícia'>\n"
+            html += f"<a href='{n['link']}'>Ler mais ➜</a>\n"
+            html += "</div>\n"
+        html += "</section>\n"
+
     html += f"""
-    </section>
     <footer>
-        <p>Gerado automaticamente por sistema de clipping — {data}</p>
+        <p>Gerado automaticamente por sistema de clipping — {data_str}</p>
     </footer>
 </div>
-</body></html>"""
+</body>
+</html>"""
 
-    # Gravar no OneDrive
-    os.makedirs(os.path.dirname(ARQUIVO_SAIDA), exist_ok=True)
+    os.makedirs(os.path.dirname(ARQUIVO_SAIDA) or ".", exist_ok=True)
     with open(ARQUIVO_SAIDA, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"[✔] Clipping atualizado: {ARQUIVO_SAIDA}")
 
 
 if __name__ == "__main__":
-    noticias = recolher_noticias()
-    economia = obter_dados_economicos()
+    noticias = recolher_noticias()          
+    economia = obter_dados_economicos()     
     gerar_html(noticias, economia)
+
+
