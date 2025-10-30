@@ -29,16 +29,22 @@ def recolher_noticias():
 
 
 def obter_dados_economicos():
+    API_KEY = "9c99f35801d7649cb3342a1a5365f8ae"
     try:
-        resp = requests.get("https://api.exchangerate.host/latest?base=EUR&symbols=USD")
+        url = f"https://api.exchangerate.host/latest?access_key={API_KEY}&base=EUR&symbols=USD"
+        resp = requests.get(url)
         data = resp.json()
+
         if "rates" in data and "USD" in data["rates"]:
             eur_usd = round(data["rates"]["USD"], 3)
         else:
+            print("⚠️ Resposta inesperada da API:", data)
             eur_usd = "N/D"
+
     except Exception as e:
         print(f"⚠️ Erro ao obter câmbio EUR/USD: {e}")
         eur_usd = "Erro"
+
     return {"EUR/USD": eur_usd}
 
 
