@@ -10,7 +10,7 @@ ARQUIVO_SAIDA = r"C:\Users\XAlves\OneDrive - Metalurgica Progresso, S.A\Clipping
 
 
 URL_LUSA_ECONOMIA = "https://www.lusa.pt/economia"
-NUM_NOTICIAS = 7
+NUM_NOTICIAS = 17
 
 
 HEADERS = {
@@ -87,7 +87,7 @@ def _limpa_texto(t):
 def _corta(resumo, n=240):
     resumo = _limpa_texto(resumo)
     if len(resumo) <= n:
-        return resumo if resumo else "Sem descrição disponível."
+        return resumo if resumo else ""
     return resumo[: n - 3].rsplit(" ", 1)[0] + "..."
 
 def recolher_noticias():
