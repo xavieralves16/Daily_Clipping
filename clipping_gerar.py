@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 from bs4 import BeautifulSoup
 
-ARQUIVO_SAIDA = os.path.expanduser("C:\Users\XAlves\OneDrive - Metalurgica Progresso, S.A\Clipping\Daily_Clipping\clipping.html")
+ARQUIVO_SAIDA = os.path.expanduser("/Clipping/Daily_Clipping/clipping.html")
 
 
 FONTES = {
