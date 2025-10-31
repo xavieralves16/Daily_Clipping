@@ -2,7 +2,7 @@ name: Commit diário automático
 
 on:
   schedule:
-    - cron: '30 9 * * *'
+    - cron: '0 11 * * *'
   workflow_dispatch:  
 
 jobs:
