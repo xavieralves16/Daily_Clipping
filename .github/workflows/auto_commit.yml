@@ -2,9 +2,8 @@ name: Commit diário automático
 
 on:
   schedule:
-    # Executa todos os dias às 08:05 UTC (09:05 em Portugal no verão)
     - cron: '30 9 * * *'
-  workflow_dispatch:  # permite executar manualmente também
+  workflow_dispatch:  
 
 jobs:
   auto-commit:
@@ -22,7 +21,7 @@ jobs:
       - name: Instalar Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'  # ou a versão que usas localmente
+          python-version: '3.11'  
 
       - name: Instalar dependências
         run: |
