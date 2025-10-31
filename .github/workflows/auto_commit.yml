@@ -15,8 +15,8 @@ jobs:
 
       - name: Configurar o Git
         run: |
-          git config user.name "GitHub Actions Bot"
-          git config user.email "actions@github.com"
+          git config user.name "xavieralves16"
+          git config user.email "xavieralves162@gmail.com"
 
       - name: Instalar Python
         uses: actions/setup-python@v5
