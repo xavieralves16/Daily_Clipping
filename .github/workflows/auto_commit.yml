@@ -1,0 +1,31 @@
+name: Commit diário automático
+
+on:
+  schedule:
+    # Executa todos os dias às 08:05 UTC (09:05 em Portugal no verão)
+    - cron: '5 9 * * *'
+  workflow_dispatch:  # permite executar manualmente também
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar o repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar utilizador do Git
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+      - name: Fazer alterações (exemplo)
+        run: |
+          # Exemplo: atualizar timestamp ou gerar ficheiro
+          echo "Última atualização: $(date)" > ultima_atualizacao.txt
+
+      - name: Commit e Push das alterações
+        run: |
+          git add .
+          git commit -m "Atualização automática diária"
+          git push
