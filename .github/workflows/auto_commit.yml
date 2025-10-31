@@ -3,7 +3,7 @@ name: Commit diário automático
 on:
   schedule:
     # Executa todos os dias às 08:05 UTC (09:05 em Portugal no verão)
-    - cron: '5 9 * * *'
+    - cron: '30 9 * * *'
   workflow_dispatch:  # permite executar manualmente também
 
 jobs:
@@ -14,15 +14,23 @@ jobs:
       - name: Clonar o repositório
         uses: actions/checkout@v4
 
-      - name: Configurar utilizador do Git
+      - name: Configurar o Git
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
 
-      - name: Fazer alterações (exemplo)
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # ou a versão que usas localmente
+
+      - name: Instalar dependências
         run: |
-          # Exemplo: atualizar timestamp ou gerar ficheiro
-          echo "Última atualização: $(date)" > ultima_atualizacao.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Executar script de geração
+        run: |
+          python clipping_gerar.py
 
       - name: Commit e Push das alterações
         run: |
